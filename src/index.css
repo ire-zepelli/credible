@@ -1,0 +1,19 @@
+@font-face {
+  font-family: "Coolvetica";
+  src: url("./assets/fonts/coolvetica-rg.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  background: #1f1e1f; /* change to #F2AF0D if you want yellow */
+  font-family: "Coolvetica", sans-serif;
+}
