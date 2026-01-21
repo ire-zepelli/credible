@@ -8,6 +8,8 @@ import {
   Outlet,
   RouterProvider,
 } from "react-router-dom";
+import Profile from "./pages/Profile.jsx";
+import ConnectWallet from "./pages/ConnectWallet.jsx";
 
 function App() {
   const router = createBrowserRouter(
@@ -15,6 +17,8 @@ function App() {
       <Route path="/" element={<Root />}>
         <Route index element={<Home />} />
         <Route path="broker/:id" element={<BrokerPreview />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="connect-wallet" element={<ConnectWallet />} />
       </Route>,
     ),
   );

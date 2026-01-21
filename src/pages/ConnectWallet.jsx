@@ -1,7 +1,7 @@
-import React from "react";
 import { Link } from "react-router-dom";
+import React from "react";
 
-export default function Home() {
+export default function ConnectWallet() {
   return (
     <div className="relative w-screen h-screen overflow-hidden">
       {/* Background */}
@@ -21,25 +21,14 @@ export default function Home() {
       </header> */}
 
       {/* Main content */}
-      <main className="relative z-10 flex items-center justify-center w-full h-full gap-3">
-        <h1 className="text-[#F2AF0D] text-[6rem] font-bold">can i trust</h1>
-        <input
-          type="text"
-          placeholder="broker id | name"
-          className="text-[5rem] text-[#FFFF] font-bold border-b-[5px] border-[#F2AF0D] bg-transparent focus:outline-none text-center w-[50rem]"
-        />
-        <h1
-          className="text-[#F2AF0D] text-[6rem] font-bold"
-          onClick={() => (window.location.href = "/broker/1")}
-        >
-          ?
-        </h1>
+      <main className="relative z-10 flex flex-col items-center justify-center w-full h-full gap-3">
+        <h1 className="text-[#F2AF0D] text-[6rem] font-bold">Credible</h1>
+        <button className="px-3 py-1 text-white bg-[#F2AF0D] rounded-xl text-2xl">
+          Connect
+        </button>
       </main>
-      <Link
-        to="/connect-wallet"
-        className="absolute z-10 text-white bottom-10 right-10"
-      >
-        Login As Broker
+      <Link to="/" className="absolute z-10 text-white bottom-10 right-10">
+        Return to Home
       </Link>
     </div>
   );

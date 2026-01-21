@@ -8,7 +8,7 @@ export default function BrokerPreview() {
         <p className="text-[#F2AF0D] text-[6rem] font-bold mb-[-12rem] ml-[-50rem]">
           never trust claims
         </p>
-        <h1 className="text-[#F2AF0D] text-[30rem] font-black">Credible</h1>
+        <h1 className="text-[#F2AF0D] text-[30rem] font-black">CREDIBLE</h1>
         <p className="text-[#F2AF0D] text-[6rem] font-bold mt-[-12rem] mr-[-50rem]">
           verify credibility
         </p>
