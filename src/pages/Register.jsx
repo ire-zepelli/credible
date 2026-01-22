@@ -1,11 +1,14 @@
-import React, { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import img from "../assets/business.png";
+import { ethers } from "ethers";
+import CredibleABI from "../abis/CredibleABI.json";
+
+const CONTRACT_ADDRESS = "0x9dB3A589cFB95587B6Ff9B21CDD4B5FAB300A8d6";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const walletAddress = searchParams.get("walletAddress");
+  const [walletAddress, setWalletAddress] = useState(null);
 
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState("");
@@ -13,39 +16,97 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Auto-connect if wallet already authorized
+  useEffect(() => {
+    const checkWallet = async () => {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({
+            method: "eth_accounts",
+          });
+          if (accounts.length > 0) setWalletAddress(accounts[0]);
+        } catch (err) {
+          console.error("Wallet check error:", err);
+        }
+      }
+    };
+    checkWallet();
+  }, []);
+
   const handleSubmit = async () => {
+    setError(null);
+
     if (!businessName) {
       setError("Business name is required.");
       return;
     }
 
+    if (!window.ethereum) {
+      setError("MetaMask is required to register on-chain.");
+      return;
+    }
+
     setLoading(true);
-    setError(null);
 
     try {
-      // Send only the user data to the backend, hash is handled server-side
-      const response = await fetch("http://localhost:3000/users/register", {
+      // 1️⃣ Connect wallet if not already connected
+      let wallet = walletAddress;
+      if (!wallet) {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        wallet = accounts[0];
+        setWalletAddress(wallet);
+      }
+
+      // 2️⃣ Send user info to backend to get profile hash
+      const res = await fetch("http://localhost:3000/users/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          walletAddress,
+          walletAddress: wallet,
           businessName,
           email,
           phoneNumber,
         }),
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Navigate to profile page after successful registration
-        navigate(`/profile/${walletAddress}`);
-      } else {
+      const data = await res.json();
+      if (!res.ok) {
         setError(data.error || "Failed to register.");
+        setLoading(false);
+        return;
       }
+
+      const profileHash = data.profileHash || data.profile_hash;
+
+      // 3️⃣ Connect to Ethereum provider & signer
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      // 4️⃣ Create contract instance
+      const contract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        CredibleABI,
+        signer,
+      );
+
+      // 5️⃣ Convert SHA256 hash to bytes32
+      const hashBytes32 = ethers.utils.arrayify("0x" + profileHash);
+
+      // 6️⃣ Send on-chain transaction
+      const tx = await contract.registerBroker(hashBytes32);
+      console.log("Transaction sent:", tx.hash);
+
+      // 7️⃣ Wait for transaction confirmation
+      await tx.wait();
+      console.log("Broker registered on-chain:", tx.hash);
+
+      // 8️⃣ Navigate to profile page
+      navigate(`/profile/${wallet}`);
     } catch (err) {
-      console.error(err);
-      setError("Something went wrong.");
+      console.error("Registration error:", err);
+      setError(err.message || "Something went wrong during registration.");
     } finally {
       setLoading(false);
     }
@@ -60,8 +121,7 @@ export default function Register() {
           <div className="bg-[#252525] w-[45rem] flex flex-col p-10">
             <h1 className="text-white">
               Your information is requested to enhance accuracy, maintain
-              transparency, and establish trust with everyone involved in the
-              process.
+              transparency, and establish trust.
             </h1>
 
             <div className="flex flex-row flex-wrap gap-10 mt-6 text-white">

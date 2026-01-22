@@ -1,8 +1,22 @@
 import React from "react";
+import reportIcon from "../assets/report_icon.png";
+import ReportBrokerCard from "../components/ReportBrokerCard";
+import { useState } from "react";
+import HistoryModal from "../components/HistoryModal";
 
 export default function BrokerPreview() {
+  const [showReport, setShowReport] = useState(false);
+
   return (
     <div className="relative w-screen h-screen overflow-hidden">
+      <HistoryModal />
+
+      {showReport && (
+        <ReportBrokerCard
+          reportedWallet=""
+          onClose={() => setShowReport(false)}
+        />
+      )}
       {/* Background */}
       <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center opacity-[.10] z-0">
         <p className="text-[#F2AF0D] text-[6rem] font-bold mb-[-12rem] ml-[-50rem]">
@@ -38,9 +52,22 @@ export default function BrokerPreview() {
             <p className="text-[#F2AF0D] text-[2rem] leading-none m-0">
               LICENCED: YES
             </p>
-            <button className="text-black bg-[#F2AF0D] px-4 py-2 rounded w-48 mt-1">
-              VIEW HISTORY
-            </button>
+            <div className="flex items-center justify-between">
+              <button className="text-black bg-[#F2AF0D] px-4 py-2 rounded w-48 mt-1">
+                VIEW HISTORY
+              </button>
+              <div
+                className="flex items-center cursor-pointer"
+                onClick={() => setShowReport(true)}
+              >
+                <img
+                  src={reportIcon}
+                  alt="report icon"
+                  className="w-auto h-[2rem]"
+                />
+                <h1 className="text-[#FF0000] underline">REPORT</h1>
+              </div>
+            </div>
           </div>
           {/* Right */}
           <div className="flex">

@@ -6,8 +6,10 @@ import logOutIcon from "../assets/logout_icon.png";
 import verifiedBadge from "../assets/verified_icon.png";
 import BrokerStatCard from "../components/BrokerStatCard";
 import BrokerActivityCard from "../components/BrokerActivityCard";
+import AddCredits from "../components/AddCredits";
 
 export default function Profile() {
+  const [showModal, setShowModal] = useState(false);
   const { walletAddress } = useParams();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -72,6 +74,13 @@ export default function Profile() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden text-[#F2AF0D]">
+      {showModal && (
+        <AddCredits
+          onClose={() => {
+            setShowModal(false);
+          }}
+        />
+      )}
       {/* Background */}
       <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center opacity-[.10] z-0">
         <p className="text-[#F2AF0D] text-[6rem] font-bold mb-[-12rem] ml-[-50rem]">
@@ -160,8 +169,13 @@ export default function Profile() {
                 <h1 className="m-0 leading-none text-white">Credipoints</h1>
                 <p className="text-5xl leading-none">1849</p>
               </div>
-              <button className="px-3 py-1 text-white bg-[#F2AF0D] rounded mt-1 self-end text-xs">
-                EDIT PROFILE
+              <button
+                className="px-3 py-1 text-white bg-[#F2AF0D] rounded mt-1 self-end text-xs"
+                onClick={() => {
+                  setShowModal(true);
+                }}
+              >
+                Add Credits
               </button>
             </div>
           </div>
