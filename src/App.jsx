@@ -1,6 +1,8 @@
 import "./App.css";
-import BrokerPreview from "./pages/BrokerPreview.jsx";
 import Home from "./pages/Home.jsx";
+import Profile from "./pages/Profile.jsx";
+import ConnectWallet from "./pages/ConnectWallet.jsx";
+import Register from "./pages/Register.jsx";
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -8,34 +10,24 @@ import {
   Outlet,
   RouterProvider,
 } from "react-router-dom";
-import Profile from "./pages/Profile.jsx";
-import ConnectWallet from "./pages/ConnectWallet.jsx";
+import BrokerPreview from "./pages/BrokerPreview.jsx";
 
 function App() {
   const router = createBrowserRouter(
     createRoutesFromElements(
       <Route path="/" element={<Root />}>
         <Route index element={<Home />} />
-        <Route path="broker/:id" element={<BrokerPreview />} />
-        <Route path="profile" element={<Profile />} />
+        <Route path="broker/:walletAddress" element={<BrokerPreview />} />
         <Route path="connect-wallet" element={<ConnectWallet />} />
+        <Route path="register" element={<Register />} />
+        <Route path="profile/:walletAddress" element={<Profile />} />
       </Route>,
     ),
   );
 
-  return (
-    <>
-      <RouterProvider router={router} />
-    </>
-  );
+  return <RouterProvider router={router} />;
 }
 
-const Root = () => {
-  return (
-    <>
-      <Outlet />
-    </>
-  );
-};
+const Root = () => <Outlet />;
 
 export default App;
