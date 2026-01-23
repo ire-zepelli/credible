@@ -1,16 +1,91 @@
-# React + Vite
+# 🔥 Credible — Web3 Broker Verification
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Backend Link: https://github.com/ire-zepelli/credible-backend
+Blockchain Contract Link: https://sepolia.etherscan.io/address/0x9db3a589cfb95587b6ff9b21cdd4b5fab300a8d6
 
-Currently, two official plugins are available:
+Credible is a Web3 proof-of-concept platform for verifying brokers using both off-chain storage and on-chain trust logic. Brokers submit transactions and credentials off-chain, while hashes are anchored on-chain to build reputation and scoring.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## ⚡ Concept
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Store heavy data off-chain (PostgreSQL)
+- Store proofs on-chain (Solidity)
+- Increase broker credibility through verified actions
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## 🛠 Tech Stack
+
+- Frontend: React + Tailwind
+- Backend: Node.js + Express
+- Database: PostgreSQL
+- Blockchain: Solidity
+- Network: Sepolia Testnet
+
+---
+
+## 🚀 Features
+
+- MetaMask wallet login
+- Broker registration with profile hash
+- Add transactions (off-chain + on-chain hash)
+- Add credentials (off-chain + on-chain hash)
+- Confirm transactions and credentials
+- Broker reputation scoring
+- Admin verification and dispute handling
+
+---
+
+## 📦 Setup
+
+### Install
+
+````bash
+npm install
+cd server
+npm install```
+
+### Environment
+
+-Create .env in backend:
+
+```bash
+DB_USER=postgres
+DB_HOST=localhost
+DB_DATABASE=credible
+DB_PASSWORD=password
+DB_PORT=5432```
+
+### Run
+
+```bash
+# Backend
+npm run dev
+
+# Frontend
+npm run dev
+````
+
+### MetaMask
+
+- Switch to Sepolia
+- Fund with tesh ETH
+
+---
+
+### Flow
+
+1. Connect Wallet
+2. Register Broker
+3. Submit Transaction
+4. Submit Credentials
+5. Anchor hash on-chain
+6. Admin Confirms
+7. Score Updates
+
+---
+
+### Developer Notes
+
+-Built for Hackathon Purposes
