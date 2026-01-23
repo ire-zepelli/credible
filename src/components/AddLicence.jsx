@@ -61,7 +61,7 @@ export default function AddLicence({ walletAddress: initialWallet, onClose }) {
         broker_wallet: walletAddress,
         license_front_url: frontFile.name, // just the file name/path
         license_back_url: backFile.name,
-        expiration_date: expirationDate,
+        year_licensed: expirationDate,
       };
 
       const res = await fetch("http://localhost:3000/licenses", {
@@ -93,11 +93,11 @@ export default function AddLicence({ walletAddress: initialWallet, onClose }) {
   return (
     <div className="fixed top-0 left-0 z-20 w-screen h-screen bg-black/20 backdrop-blur-sm">
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#2B2B2B] text-white w-[40rem] h-fit rounded-[2rem] p-8 flex flex-col gap-4">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Add License</h1>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl"
+            className="text-2xl text-gray-400 hover:text-white"
           >
             ×
           </button>

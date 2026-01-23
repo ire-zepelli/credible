@@ -11,6 +11,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import BrokerPreview from "./pages/BrokerPreview.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
 
 function App() {
   const router = createBrowserRouter(
@@ -21,6 +22,7 @@ function App() {
         <Route path="connect-wallet" element={<ConnectWallet />} />
         <Route path="register" element={<Register />} />
         <Route path="profile/:walletAddress" element={<Profile />} />
+        <Route path="admin" element={<AdminDashboard />} />
       </Route>,
     ),
   );

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import CredibleABI from "../abis/CredibleABI.json";
 
-const CONTRACT_ADDRESS = "0x9dB3A589cFB95587B6Ff9B21CDD4B5FAB300A8d6";
+const CONTRACT_ADDRESS = "0x18bd11044Da9183c07D8Ff7579a5161D9E6f87b9";
 
 export default function AddTransactionCard({ onClose }) {
   const [walletAddress, setWalletAddress] = useState(null);
@@ -125,17 +125,17 @@ export default function AddTransactionCard({ onClose }) {
   return (
     <div className="fixed top-0 left-0 z-30 w-screen h-screen bg-black/20 backdrop-blur-sm">
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#2B2B2B] text-white w-[40rem] rounded-[2rem] p-8 flex flex-col">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <h1>Add Transaction</h1>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white text-2xl"
+            className="text-2xl text-gray-400 hover:text-white"
           >
             ×
           </button>
         </div>
 
-        <div className="flex flex-col mt-4 gap-4">
+        <div className="flex flex-col gap-4 mt-4">
           <div className="flex flex-col gap-2">
             <h1>Title</h1>
             <input
@@ -147,7 +147,7 @@ export default function AddTransactionCard({ onClose }) {
           </div>
 
           <div className="flex justify-between gap-4">
-            <div className="flex flex-col gap-2 w-1/2">
+            <div className="flex flex-col w-1/2 gap-2">
               <h1>Client ID</h1>
               <input
                 type="file"
@@ -156,7 +156,7 @@ export default function AddTransactionCard({ onClose }) {
               />
             </div>
 
-            <div className="flex flex-col gap-2 w-1/2">
+            <div className="flex flex-col w-1/2 gap-2">
               <h1>Upload Proof</h1>
               <input
                 type="file"

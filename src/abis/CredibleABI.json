@@ -275,20 +275,6 @@
     "inputs": [
       { "internalType": "bytes32", "name": "txHash", "type": "bytes32" }
     ],
-    "name": "getDispute",
-    "outputs": [
-      { "internalType": "bool", "name": "", "type": "bool" },
-      { "internalType": "bool", "name": "", "type": "bool" },
-      { "internalType": "bool", "name": "", "type": "bool" },
-      { "internalType": "bytes32", "name": "", "type": "bytes32" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "bytes32", "name": "txHash", "type": "bytes32" }
-    ],
     "name": "getTransaction",
     "outputs": [
       { "internalType": "address", "name": "", "type": "address" },

@@ -2,7 +2,7 @@
 
 Backend Link: https://github.com/ire-zepelli/credible-backend
 <br/>
-Blockchain Contract Link: https://sepolia.etherscan.io/address/0x9db3a589cfb95587b6ff9b21cdd4b5fab300a8d6
+Blockchain Contract Link: https://sepolia.etherscan.io/address/0x18bd11044da9183c07d8ff7579a5161d9e6f87b9#events
 
 Credible is a Web3 proof-of-concept platform for verifying brokers using both off-chain storage and on-chain trust logic. Brokers submit transactions and credentials off-chain, while hashes are anchored on-chain to build reputation and scoring.
 
@@ -42,21 +42,21 @@ Credible is a Web3 proof-of-concept platform for verifying brokers using both of
 
 ### Install
 
-````bash
+`````bash
 npm install
 cd server
-npm install```
+npm install````
 
 ### Environment
 
 -Create .env in backend:
 
-```bash
+````bash
 DB_USER=postgres
 DB_HOST=localhost
 DB_DATABASE=credible
 DB_PASSWORD=password
-DB_PORT=5432```
+DB_PORT=5432````
 
 ### Run
 
@@ -66,7 +66,7 @@ npm run dev
 
 # Frontend
 npm run dev
-````
+`````
 
 ### MetaMask
 
