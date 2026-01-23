@@ -1,7 +1,8 @@
 # 🔥 Credible — Web3 Broker Verification
 
--Backend Link: https://github.com/ire-zepelli/credible-backend
--Blockchain Contract Link: https://sepolia.etherscan.io/address/0x9db3a589cfb95587b6ff9b21cdd4b5fab300a8d6
+Backend Link: https://github.com/ire-zepelli/credible-backend
+<br/>
+Blockchain Contract Link: https://sepolia.etherscan.io/address/0x9db3a589cfb95587b6ff9b21cdd4b5fab300a8d6
 
 Credible is a Web3 proof-of-concept platform for verifying brokers using both off-chain storage and on-chain trust logic. Brokers submit transactions and credentials off-chain, while hashes are anchored on-chain to build reputation and scoring.
 
