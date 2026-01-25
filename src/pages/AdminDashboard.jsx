@@ -1,336 +1,310 @@
-import React, { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { ethers } from "ethers";
+import MainLayout from "../components/layout/MainLayout";
+import Sidebar from "../components/layout/Sidebar";
+import Header from "../components/layout/Header";
+import DataTable from "../components/tables/DataTable";
+import DetailModal from "../components/modals/DetailModal";
+import DenialModal from "../components/modals/DenialModal";
+import { COOLVETICA_FONT } from "../utils/constants";
 import CredibleABI from "../abis/CredibleABI.json";
 
-const CONTRACT_ADDRESS = "0x18bd11044Da9183c07D8Ff7579a5161D9E6f87b9";
+const CONTRACT_ADDRESS = "0xfDC9b0aDefA8b9a262c2c99dDB308F3b1B7E9aEb";
 
 export default function AdminDashboard() {
-  const [transactions, setTransactions] = useState([]);
-  const [credentials, setCredentials] = useState([]);
-  const [licenses, setLicenses] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState("transactions");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [showDenyModal, setShowDenyModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
+  const [loadingBlockchain, setLoadingBlockchain] = useState(false);
 
-  // ---------------- LOAD DATA ----------------
-  const loadData = async () => {
-    try {
-      const [txRes, credRes, licRes] = await Promise.all([
-        fetch("http://localhost:3000/admin/pending/transactions"),
-        fetch("http://localhost:3000/admin/pending/credentials"),
-        fetch("http://localhost:3000/admin/pending/licenses"),
+  const [data, setData] = useState({
+    transactions: [],
+    credentials: [],
+    licenses: [],
+    reports: [],
+  });
+
+  // ---------------- WALLET & CONTRACT ----------------
+  const connectWallet = async () => {
+    if (!window.ethereum) throw new Error("MetaMask not found");
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+  };
+
+  const getContract = async () => {
+    await connectWallet();
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    return new ethers.Contract(CONTRACT_ADDRESS, CredibleABI, signer);
+  };
+
+  // ---------------- FETCH DATA ----------------
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      const results = await Promise.allSettled([
+        fetch("http://localhost:3000/admin/transactions"),
+        fetch("http://localhost:3000/admin/credentials"),
+        fetch("http://localhost:3000/admin/licenses"),
+        fetch("http://localhost:3000/admin/reports"),
       ]);
 
-      setTransactions(await txRes.json());
-      setCredentials(await credRes.json());
-      setLicenses(await licRes.json());
-    } catch (err) {
-      console.error("Error loading data:", err);
-    }
-  };
+      const mapData = (raw, type) =>
+        raw.map((item) => {
+          if (type === "reports") {
+            return {
+              id: item.id,
+              type,
+              name: item.wallet_address || "Unknown",
+              title: item.title || "Report",
+              walletAddress: item.wallet_address,
+              reportHash: item.report_hash,
+              status: item.is_confirmed
+                ? "approved"
+                : item.deny_message
+                  ? "denied"
+                  : "pending",
+              denyMessage: item.deny_message,
+              createdAt: item.created_at,
+            };
+          }
 
-  useEffect(() => {
-    loadData();
+          return {
+            id: item.id,
+            type,
+            name: item.name,
+            email: item.email,
+            walletAddress: item.wallet_address,
+            title: item.title,
+            description: item.description,
+            files: [
+              item.client_id_url,
+              item.proof_image_url,
+              item.credential_image_url,
+              item.license_front_url,
+              item.license_back_url,
+              item.evidence_url,
+            ].filter(Boolean),
+            unitSold: item.unit_sold,
+            tx_hash: item.tx_hash,
+            credential_hash: item.credential_hash,
+            license_id: item.id,
+            reportHash: item.report_hash,
+            status: item.is_confirmed
+              ? "approved"
+              : item.deny_message
+                ? "denied"
+                : "pending",
+            denyMessage: item.deny_message,
+            createdAt: item.created_at,
+          };
+        });
+
+      setData({
+        transactions:
+          results[0].status === "fulfilled"
+            ? mapData(await results[0].value.json(), "transactions")
+            : [],
+        credentials:
+          results[1].status === "fulfilled"
+            ? mapData(await results[1].value.json(), "credentials")
+            : [],
+        licenses:
+          results[2].status === "fulfilled"
+            ? mapData(await results[2].value.json(), "licenses")
+            : [],
+        reports:
+          results[3].status === "fulfilled"
+            ? mapData(await results[3].value.json(), "reports")
+            : [],
+      });
+    };
+
+    fetchAdminData();
   }, []);
 
-  // ---------------- CONNECT WALLET ----------------
-  const connectWallet = async () => {
-    if (!window.ethereum) throw new Error("MetaMask required");
-    const accounts = await window.ethereum.request({
-      method: "eth_requestAccounts",
-    });
-    return accounts[0];
+  // ---------------- HELPERS ----------------
+  const updateItemStatus = (type, id, status, reason = null) => {
+    setData((prev) => ({
+      ...prev,
+      [type]: prev[type].map((item) =>
+        item.id === id ? { ...item, status, denyMessage: reason } : item,
+      ),
+    }));
   };
 
-  // ---------------- HANDLE ACTION ----------------
-  const handleAction = async (type, item, action) => {
-    setLoading(true);
+  // ---------------- DENY ----------------
+  const sendDenyRequest = async (type, item, reason) => {
+    let url = "";
+    let payload = {};
 
-    let endpoint = "";
-    let body = {};
-
-    switch (type) {
-      case "transaction":
-        endpoint = `http://localhost:3000/admin/${action}/transaction`;
-        body = { tx_hash: item.tx_hash };
-        break;
-      case "credential":
-        endpoint = `http://localhost:3000/admin/${action}/credential`;
-        body = { credential_hash: item.credential_hash };
-        break;
-      case "license":
-        endpoint = `http://localhost:3000/admin/${action}/license`;
-        body = { license_id: item.id };
-        break;
-      default:
-        setLoading(false);
-        return;
+    if (type === "transactions") {
+      url = "http://localhost:3000/admin/deny/transaction";
+      payload = { tx_hash: item.tx_hash, deny_message: reason };
+    } else if (type === "credentials") {
+      url = "http://localhost:3000/admin/deny/credential";
+      payload = { credential_hash: item.credential_hash, deny_message: reason };
+    } else if (type === "licenses") {
+      url = "http://localhost:3000/admin/deny/license";
+      payload = { license_id: item.license_id, deny_message: reason };
+    } else if (type === "reports") {
+      url = "http://localhost:3000/admin/deny/report";
+      payload = { report_hash: item.reportHash, deny_message: reason };
     }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) throw new Error("Deny failed");
+    return res.json();
+  };
+
+  // ---------------- APPROVE ----------------
+  const sendApproveRequest = async (type, item) => {
+    let url = "";
+    let payload = {};
+
+    if (type === "transactions") {
+      url = "http://localhost:3000/admin/approve/transaction";
+      payload = { tx_hash: item.tx_hash };
+    } else if (type === "credentials") {
+      url = "http://localhost:3000/admin/approve/credential";
+      payload = { credential_hash: item.credential_hash };
+    } else if (type === "licenses") {
+      url = "http://localhost:3000/admin/approve/license";
+      payload = { license_id: item.license_id };
+    } else if (type === "reports") {
+      url = "http://localhost:3000/admin/approve/report";
+      payload = { report_hash: item.reportHash };
+    } else {
+      throw new Error("Unknown type");
+    }
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error("Backend approve failed: " + text);
+    }
+
+    return res.json();
+  };
+
+  const sendApproveToBlockchain = async (type, item) => {
+    setLoadingBlockchain(true);
+    const contract = await getContract();
+
+    let tx;
+    if (type === "transactions") {
+      tx = await contract.confirmTransaction(item.tx_hash);
+    } else if (type === "credentials") {
+      tx = await contract.confirmCredential(item.credential_hash);
+    } else if (type === "reports") {
+      tx = await contract.confirmReport(item.reportHash);
+    } else if (type === "licenses") {
+      tx = await contract.verifyBroker(item.walletAddress);
+    } else {
+      throw new Error("Unknown type");
+    }
+
+    await tx.wait();
+    setLoadingBlockchain(false);
+  };
+
+  const handleApprove = async () => {
+    if (!selectedItem) return;
 
     try {
-      // ---------------- OFFCHAIN CONFIRM/DENY ----------------
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      setLoadingBlockchain(true);
 
-      if (!res.ok) throw new Error("Failed to update item off-chain");
+      // 1️⃣ Blockchain first
+      await sendApproveToBlockchain(selectedItem.type, selectedItem);
 
-      // ---------------- ONCHAIN CONFIRM ----------------
-      if (
-        action === "confirm" &&
-        ["license", "credential", "transaction"].includes(type)
-      ) {
-        const adminWallet = await connectWallet();
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner(adminWallet);
-        const contract = new ethers.Contract(
-          CONTRACT_ADDRESS,
-          CredibleABI,
-          signer,
-        );
+      // 2️⃣ Backend updates off-chain status
+      await sendApproveRequest(selectedItem.type, selectedItem);
 
-        if (type === "license") {
-          // For licenses: use broker wallet
-          const brokerAddress = item.broker_wallet;
-          const tx = await contract.verifyCredential(brokerAddress);
-          console.log("License verified on-chain:", tx.hash);
-          await tx.wait();
-        } else if (type === "credential") {
-          // For credentials: use credential hash
-          const hashBytes32 = item.credential_hash.startsWith("0x")
-            ? item.credential_hash
-            : ethers.utils.hexlify(
-                ethers.utils.toUtf8Bytes(item.credential_hash),
-              );
-          const tx = await contract.confirmCredential(hashBytes32);
-          console.log("Credential confirmed on-chain:", tx.hash);
-          await tx.wait();
-        } else if (type === "transaction") {
-          // For transactions: use tx hash
-          const hashBytes32 = item.tx_hash.startsWith("0x")
-            ? item.tx_hash
-            : ethers.utils.hexlify(ethers.utils.toUtf8Bytes(item.tx_hash));
-          const tx = await contract.confirmTransaction(hashBytes32);
-          console.log("Transaction confirmed on-chain:", tx.hash);
-          await tx.wait();
-        }
-      }
-
-      // Refresh data
-      await loadData();
+      // 3️⃣ UI update
+      updateItemStatus(selectedItem.type, selectedItem.id, "approved");
+      setSelectedItem(null);
     } catch (err) {
-      console.error(err);
-      alert(err.message || "Something went wrong");
+      console.error("Approve failed:", err);
+      alert("Approve failed: " + err.message);
     } finally {
-      setLoading(false);
+      setLoadingBlockchain(false);
     }
   };
 
-  // ---------------- HELPER: STATUS ----------------
-  const renderStatus = (item) => {
-    if (item.is_confirmed === true)
-      return <span className="text-green-500">Confirmed</span>;
-    if (item.is_confirmed === null)
-      return <span className="text-red-500">Denied</span>;
-    return <span className="text-yellow-400">Pending</span>;
+  const handleDenyClick = () => {
+    setPendingAction({ id: selectedItem.id, type: selectedItem.type });
+    setShowDenyModal(true);
   };
 
-  // ---------------- RENDER ----------------
+  const handleDenySubmit = async (reason) => {
+    try {
+      await sendDenyRequest(pendingAction.type, selectedItem, reason);
+      updateItemStatus(pendingAction.type, pendingAction.id, "denied", reason);
+      setShowDenyModal(false);
+      setSelectedItem(null);
+      setPendingAction(null);
+    } catch (err) {
+      alert("Failed to deny item");
+      console.error(err);
+    }
+  };
+
+  const filteredData =
+    data[activeTab]?.filter(
+      (item) =>
+        item.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.denyMessage?.toLowerCase().includes(searchQuery.toLowerCase()),
+    ) || [];
+
   return (
-    <div className="p-10 text-white bg-[#121212] min-h-screen">
-      <h1 className="mb-6 text-3xl">Admin Verification Dashboard</h1>
+    <MainLayout>
+      <Sidebar
+        isOpen={isSidebarOpen}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
 
-      {/* TRANSACTIONS */}
-      <h2 className="mb-3 text-xl">Pending Transactions</h2>
-      {transactions.length === 0 && <p>No pending transactions.</p>}
-      {transactions.map((tx) => (
-        <div
-          key={tx.id}
-          className="bg-[#1e1e1e] p-4 rounded mb-3 flex flex-col gap-2"
-        >
-          <p>
-            <b>Status:</b> {renderStatus(tx)}
-          </p>
-          <p>
-            <b>Broker:</b> {tx.broker_wallet}
-          </p>
-          <p>
-            <b>Tx Hash:</b> {tx.tx_hash}
-          </p>
-          <p>
-            <b>Title:</b> {tx.title}
-          </p>
-          <p>
-            <b>Unit Sold:</b> {tx.unit_sold}
-          </p>
-          <p>
-            <b>Description:</b> {tx.description}
-          </p>
-          <div className="flex gap-4">
-            <div>
-              <p>
-                <b>Client ID:</b>
-              </p>
-              {tx.client_id_url ? (
-                <img
-                  src={`/${tx.client_id_url}`}
-                  alt="Client ID"
-                  className="w-48 h-auto border rounded"
-                />
-              ) : (
-                <p className="text-gray-400">No image</p>
-              )}
-            </div>
-            <div>
-              <p>
-                <b>Proof:</b>
-              </p>
-              {tx.proof_image_url ? (
-                <img
-                  src={`/${tx.proof_image_url}`}
-                  alt="Proof"
-                  className="w-48 h-auto border rounded"
-                />
-              ) : (
-                <p className="text-gray-400">No image</p>
-              )}
-            </div>
-          </div>
-          <div className="flex gap-2 mt-2">
-            <button
-              disabled={loading || tx.is_confirmed === true}
-              onClick={() => handleAction("transaction", tx, "confirm")}
-              className="px-4 py-1 text-black bg-green-500 rounded"
-            >
-              Confirm
-            </button>
-            <button
-              disabled={loading || tx.is_confirmed === null}
-              onClick={() => handleAction("transaction", tx, "deny")}
-              className="px-4 py-1 text-black bg-red-500 rounded"
-            >
-              Deny
-            </button>
-          </div>
-        </div>
-      ))}
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Header
+          isSidebarOpen={isSidebarOpen}
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
 
-      {/* CREDENTIALS */}
-      <h2 className="mt-10 mb-3 text-xl">Pending Credentials</h2>
-      {credentials.length === 0 && <p>No pending credentials.</p>}
-      {credentials.map((cred) => (
-        <div
-          key={cred.id}
-          className="bg-[#1e1e1e] p-4 rounded mb-3 flex flex-col gap-2"
-        >
-          <p>
-            <b>Status:</b> {renderStatus(cred)}
-          </p>
-          <p>
-            <b>Broker:</b> {cred.broker_wallet}
-          </p>
-          <p>
-            <b>Hash:</b> {cred.credential_hash}
-          </p>
-          <p>
-            <b>Title:</b> {cred.title}
-          </p>
-          <p>
-            <b>Description:</b> {cred.description}
-          </p>
-          {cred.credential_image_url ? (
-            <img
-              src={`/${cred.credential_image_url}`}
-              alt="Credential"
-              className="w-48 h-auto border rounded"
-            />
-          ) : (
-            <p className="text-gray-400">No image</p>
-          )}
-          <div className="flex gap-2 mt-2">
-            <button
-              disabled={loading || cred.is_confirmed === true}
-              onClick={() => handleAction("credential", cred, "confirm")}
-              className="px-4 py-1 text-black bg-blue-500 rounded"
-            >
-              Confirm
-            </button>
-            <button
-              disabled={loading || cred.is_confirmed === null}
-              onClick={() => handleAction("credential", cred, "deny")}
-              className="px-4 py-1 text-black bg-red-500 rounded"
-            >
-              Deny
-            </button>
-          </div>
-        </div>
-      ))}
+        <main style={COOLVETICA_FONT} className="flex-1 p-10 overflow-y-auto">
+          <DataTable
+            data={filteredData}
+            onInspect={(item) => setSelectedItem({ ...item, type: activeTab })}
+          />
+        </main>
+      </div>
 
-      {/* LICENSES */}
-      <h2 className="mt-10 mb-3 text-xl">Pending Licenses</h2>
-      {licenses.length === 0 && <p>No pending licenses.</p>}
-      {licenses.map((lic) => (
-        <div
-          key={lic.id}
-          className="bg-[#1e1e1e] p-4 rounded mb-3 flex flex-col gap-2"
-        >
-          <p>
-            <b>Status:</b> {renderStatus(lic)}
-          </p>
-          <p>
-            <b>Broker:</b> {lic.broker_wallet}
-          </p>
-          <div className="flex gap-4">
-            <div>
-              <p>
-                <b>License Front:</b>
-              </p>
-              {lic.license_front_url ? (
-                <img
-                  src={`/${lic.license_front_url}`}
-                  alt="License Front"
-                  className="w-48 h-auto border rounded"
-                />
-              ) : (
-                <p className="text-gray-400">No image</p>
-              )}
-            </div>
-            <div>
-              <p>
-                <b>License Back:</b>
-              </p>
-              {lic.license_back_url ? (
-                <img
-                  src={`/${lic.license_back_url}`}
-                  alt="License Back"
-                  className="w-48 h-auto border rounded"
-                />
-              ) : (
-                <p className="text-gray-400">No image</p>
-              )}
-            </div>
-          </div>
-          <p>
-            <b>Year Licensed:</b> {lic.year_licensed.toString().slice(0, 4)}
-          </p>
-          <div className="flex gap-2 mt-2">
-            <button
-              disabled={loading || lic.is_confirmed === true}
-              onClick={() => handleAction("license", lic, "confirm")}
-              className="px-4 py-1 text-black bg-yellow-500 rounded"
-            >
-              Confirm
-            </button>
-            <button
-              disabled={loading || lic.is_confirmed === null}
-              onClick={() => handleAction("license", lic, "deny")}
-              className="px-4 py-1 text-black bg-red-500 rounded"
-            >
-              Deny
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
+      <DetailModal
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onApprove={handleApprove}
+        onDeny={handleDenyClick}
+        loading={loadingBlockchain}
+      />
+
+      <DenialModal
+        isOpen={showDenyModal}
+        onClose={() => setShowDenyModal(false)}
+        onSubmit={handleDenySubmit}
+      />
+    </MainLayout>
   );
 }

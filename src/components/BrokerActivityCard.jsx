@@ -14,6 +14,7 @@ export default function BrokerActivityCard({
         title: "License Submitted",
         date: license.created_at || null,
         status: license.is_confirmed, // true | false | null
+        denyMessage: license.deny_message || null, // ✅ add deny message
       });
     }
 
@@ -23,6 +24,7 @@ export default function BrokerActivityCard({
         title: `Credential: ${c.title || "Unknown"}`,
         date: c.created_at || null,
         status: c.is_confirmed, // true | false | null
+        denyMessage: c.deny_message || null,
       });
     });
 
@@ -32,10 +34,10 @@ export default function BrokerActivityCard({
         title: `Transaction: ${t.title || "Unknown"}`,
         date: t.created_at || null,
         status: t.is_confirmed, // true | false | null
+        denyMessage: t.deny_message || null,
       });
     });
 
-    // Sort newest first safely
     return items.sort((a, b) => {
       const timeA = a.date ? new Date(a.date).getTime() : 0;
       const timeB = b.date ? new Date(b.date).getTime() : 0;
@@ -43,11 +45,14 @@ export default function BrokerActivityCard({
     });
   }, [credentials, license, transactions]);
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status, denyMessage) => {
     if (status === true)
       return { text: "Confirmed", className: "bg-green-600/30 text-green-400" };
-    if (status === null)
-      return { text: "Denied", className: "bg-red-600/30 text-red-400" };
+    if (denyMessage)
+      return {
+        text: `Denied: ${denyMessage}`,
+        className: "bg-red-600/30 text-red-400",
+      };
     return { text: "Pending", className: "bg-yellow-600/30 text-yellow-400" };
   };
 
@@ -62,7 +67,7 @@ export default function BrokerActivityCard({
       )}
 
       {activities.map((item, idx) => {
-        const statusLabel = getStatusLabel(item.status);
+        const statusLabel = getStatusLabel(item.status, item.denyMessage);
         return (
           <div
             key={idx}

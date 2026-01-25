@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import CredibleABI from "../abis/CredibleABI.json";
-
-const CONTRACT_ADDRESS = "0x18bd11044Da9183c07D8Ff7579a5161D9E6f87b9";
 
 export default function AddTransactionCard({ onClose }) {
   const [walletAddress, setWalletAddress] = useState(null);
@@ -36,12 +32,8 @@ export default function AddTransactionCard({ onClose }) {
   const handleSubmit = async () => {
     setError(null);
 
-    // 1️⃣ Connect wallet if not connected
-    if (!walletAddress) {
-      if (!window.ethereum) {
-        setError("MetaMask is required to submit a transaction.");
-        return;
-      }
+    // Optional: Connect wallet if not connected
+    if (!walletAddress && window.ethereum) {
       try {
         const accounts = await window.ethereum.request({
           method: "eth_requestAccounts",
@@ -54,7 +46,7 @@ export default function AddTransactionCard({ onClose }) {
       }
     }
 
-    // 2️⃣ Validate required fields
+    // Validate required fields
     if (
       !title.trim() ||
       !unitSold.trim() ||
@@ -68,17 +60,17 @@ export default function AddTransactionCard({ onClose }) {
     setLoading(true);
 
     try {
-      // 3️⃣ Prepare payload for backend
+      // Prepare payload for backend
       const payload = {
         broker_wallet: walletAddress,
-        client_id_url: clientIdFile.name, // just the file name
+        client_id_url: clientIdFile.name,
         title,
         description,
-        unit_sold: unitSold, // now text
-        proof_image_url: proofFile.name, // just the file name
+        unit_sold: unitSold,
+        proof_image_url: proofFile.name,
       };
 
-      // 4️⃣ Send to backend
+      // Send to backend
       const res = await fetch("http://localhost:3000/transactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -92,27 +84,9 @@ export default function AddTransactionCard({ onClose }) {
         return;
       }
 
-      const txHash = data.tx_hash;
-      console.log("Backend tx_hash:", txHash);
+      console.log("Transaction saved off-chain:", data);
 
-      // 5️⃣ Send on-chain transaction
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(
-        CONTRACT_ADDRESS,
-        CredibleABI,
-        signer,
-      );
-
-      // Convert backend tx_hash to bytes32
-      const hashBytes32 = ethers.utils.arrayify(txHash);
-
-      const tx = await contract.initiateTransaction(hashBytes32);
-      console.log("On-chain transaction sent:", tx.hash);
-      await tx.wait();
-      console.log("On-chain transaction confirmed:", tx.hash);
-
-      // 6️⃣ Close modal after success
+      // Close modal after success
       onClose();
     } catch (err) {
       console.error("Transaction submission error:", err);

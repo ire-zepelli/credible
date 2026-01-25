@@ -4,7 +4,7 @@ import img from "../assets/business.png";
 import { ethers } from "ethers";
 import CredibleABI from "../abis/CredibleABI.json";
 
-const CONTRACT_ADDRESS = "0x18bd11044Da9183c07D8Ff7579a5161D9E6f87b9";
+const CONTRACT_ADDRESS = "0xfDC9b0aDefA8b9a262c2c99dDB308F3b1B7E9aEb";
 
 export default function Register() {
   const navigate = useNavigate();

@@ -24,6 +24,25 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "broker",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "newScore",
+        "type": "int256"
+      }
+    ],
+    "name": "BrokerVerified",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
         "internalType": "bytes32",
         "name": "credentialHash",
         "type": "bytes32"
@@ -33,85 +52,15 @@
         "internalType": "address",
         "name": "broker",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "newScore",
+        "type": "int256"
       }
     ],
     "name": "CredentialAdded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "credentialHash",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "int256",
-        "name": "newScore",
-        "type": "int256"
-      }
-    ],
-    "name": "CredentialConfirmed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "broker",
-        "type": "address"
-      }
-    ],
-    "name": "CredentialVerified",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "txHash",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes32",
-        "name": "evidenceHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "DisputeRaised",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "txHash",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "valid",
-        "type": "bool"
-      },
-      {
-        "indexed": false,
-        "internalType": "int256",
-        "name": "newScore",
-        "type": "int256"
-      }
-    ],
-    "name": "DisputeResolved",
     "type": "event"
   },
   {
@@ -139,8 +88,14 @@
       {
         "indexed": true,
         "internalType": "bytes32",
-        "name": "txHash",
+        "name": "reportHash",
         "type": "bytes32"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "broker",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -149,7 +104,7 @@
         "type": "int256"
       }
     ],
-    "name": "TransactionConfirmed",
+    "name": "ReportAdded",
     "type": "event"
   },
   {
@@ -166,9 +121,15 @@
         "internalType": "address",
         "name": "broker",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "int256",
+        "name": "newScore",
+        "type": "int256"
       }
     ],
-    "name": "TransactionInitiated",
+    "name": "TransactionAdded",
     "type": "event"
   },
   {
@@ -176,6 +137,24 @@
       { "internalType": "bytes32", "name": "credentialHash", "type": "bytes32" }
     ],
     "name": "addCredential",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "reportHash", "type": "bytes32" }
+    ],
+    "name": "addReport",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "txHash", "type": "bytes32" }
+    ],
+    "name": "addTransaction",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -200,24 +179,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "bytes32", "name": "credentialHash", "type": "bytes32" }
-    ],
-    "name": "confirmCredential",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "bytes32", "name": "txHash", "type": "bytes32" }
-    ],
-    "name": "confirmTransaction",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "name": "credentials",
     "outputs": [
@@ -228,18 +189,6 @@
         "type": "bytes32"
       },
       { "internalType": "uint8", "name": "status", "type": "uint8" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
-    "name": "disputes",
-    "outputs": [
-      { "internalType": "bool", "name": "exists", "type": "bool" },
-      { "internalType": "bool", "name": "resolved", "type": "bool" },
-      { "internalType": "bool", "name": "valid", "type": "bool" },
-      { "internalType": "bytes32", "name": "evidenceHash", "type": "bytes32" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -273,6 +222,19 @@
   },
   {
     "inputs": [
+      { "internalType": "bytes32", "name": "reportHash", "type": "bytes32" }
+    ],
+    "name": "getReport",
+    "outputs": [
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "bytes32", "name": "", "type": "bytes32" },
+      { "internalType": "uint8", "name": "", "type": "uint8" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
       { "internalType": "bytes32", "name": "txHash", "type": "bytes32" }
     ],
     "name": "getTransaction",
@@ -286,25 +248,6 @@
   },
   {
     "inputs": [
-      { "internalType": "bytes32", "name": "txHash", "type": "bytes32" }
-    ],
-    "name": "initiateTransaction",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "bytes32", "name": "txHash", "type": "bytes32" },
-      { "internalType": "bytes32", "name": "evidenceHash", "type": "bytes32" }
-    ],
-    "name": "raiseDispute",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
       { "internalType": "bytes32", "name": "profileHash", "type": "bytes32" }
     ],
     "name": "registerBroker",
@@ -313,13 +256,14 @@
     "type": "function"
   },
   {
-    "inputs": [
-      { "internalType": "bytes32", "name": "txHash", "type": "bytes32" },
-      { "internalType": "bool", "name": "valid", "type": "bool" }
+    "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "name": "reports",
+    "outputs": [
+      { "internalType": "address", "name": "broker", "type": "address" },
+      { "internalType": "bytes32", "name": "reportHash", "type": "bytes32" },
+      { "internalType": "uint8", "name": "status", "type": "uint8" }
     ],
-    "name": "resolveDispute",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -346,7 +290,7 @@
     "inputs": [
       { "internalType": "address", "name": "broker", "type": "address" }
     ],
-    "name": "verifyCredential",
+    "name": "verifyBroker",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

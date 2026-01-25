@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { ethers } from "ethers";
-import CredibleABI from "../abis/CredibleABI.json";
-
-const CONTRACT_ADDRESS = "0x18bd11044Da9183c07D8Ff7579a5161D9E6f87b9";
 
 export default function AddCredentialsCard({ onClose }) {
   const [walletAddress, setWalletAddress] = useState(null);
@@ -81,27 +77,9 @@ export default function AddCredentialsCard({ onClose }) {
         return;
       }
 
-      const credentialHash = data.credential_hash;
-      console.log("Credential hash:", credentialHash);
+      console.log("Credential saved off-chain:", data);
 
-      // ---------------- ONCHAIN SAVE ----------------
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-
-      const contract = new ethers.Contract(
-        CONTRACT_ADDRESS,
-        CredibleABI,
-        signer,
-      );
-
-      const hashBytes32 = ethers.utils.arrayify(credentialHash);
-
-      const tx = await contract.addCredential(hashBytes32);
-      console.log("On-chain tx:", tx.hash);
-
-      await tx.wait();
-      console.log("Credential confirmed on-chain");
-
+      // Close the modal after success
       onClose();
     } catch (err) {
       console.error("Credential error:", err);
